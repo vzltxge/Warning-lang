@@ -1,0 +1,6 @@
+i32 a = 100;
+loopsy i in 12...a {
+  a--;
+};
+
+i32 b = null;
