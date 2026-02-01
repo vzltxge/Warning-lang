@@ -42,7 +42,7 @@ def run(fn: str, text: str | None):
   if ast.error:
     return ast
   if dbg_parse:
-    with open("testing/ast.th_dbg", "w") as f:
+    with open("testing/ast.warn_dbg", "w") as f:
       f.write(f"tokens[{len(tokens)}]: __format__ = Type, Contained:\n\n")
       for node in ast.node:
         f.write(repr(node))
