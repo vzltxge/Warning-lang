@@ -1,27 +1,15 @@
-import ctypes
+from types_.num_types import num_type, whole_num_types, decimal_types
 from typing import Any, Self, TypeAlias
-
 from middle_end.ERRORS import RTError
 from middle_end.POSITION import Pos
-from runtime.typemap import type_map
+from types_.typemap import type_map
 from typechecking.TYPECHECKER import TypeChecker
+from runtime.context import Context
+
+# FIX: Make code in operate function better and less repetitive.
 
 """Number class to help with number ops"""
-num_type: TypeAlias = (ctypes.c_int64
-                       | ctypes.c_int32
-                       | ctypes.c_int16
-                       | ctypes.c_int8
-                       | ctypes.c_int64
-                       | ctypes.c_float
-                       | ctypes.c_double
-                       | ctypes.c_uint8
-                       | ctypes.c_uint16
-                       | ctypes.c_uint32
-                       | ctypes.c_uint64
-)
 
-class Context:
-  ... # NOTE: Use interpreter's Context, but don't import it otherwise there will be an import error
 
 class RuntimeNumber:
   def __init__(self, value: num_type) -> None:
@@ -29,126 +17,88 @@ class RuntimeNumber:
     self.set_pos()
     self.set_context()
     self.type_: type = type(value)
+
   def is_true(self) -> bool:
-    # We are using ctypes module so use .value.value instead of .value
+    # NOTE: We are using ctypes module so use .value.value instead of .value
     return self.value.value != 0
 
   def operate(self, other, operation: str) -> Any:
     if isinstance(other, RuntimeNumber):
-      whole_num_types: tuple = (ctypes.c_uint16, ctypes.c_uint32, ctypes.c_uint64, ctypes.c_int8, ctypes.c_int16, ctypes.c_int32, ctypes.c_int64, ctypes.c_uint8)
-      decimal_types: tuple = (ctypes.c_float, ctypes.c_double)
       type_1 = type(self.value)
       type_2 = type(other.value)
       type_ = TypeChecker().promote_type(type_1, type_2)
 
       # NOTE: variable conv_type is the type you convert the value to when performing operations
-      conv_type = float  # If no type is found, it defaults to float
+      # If no type is found, it defaults to float
       result_value = None
-      if type_ in whole_num_types:
-        conv_type = int
-      elif type_ in decimal_types:
-        conv_type = float
-      if type(self.value) in whole_num_types + decimal_types:
+      
+      conv_type: TypeAlias = int
+      if type_ not in whole_num_types:
+        conv_type: TypeAlias = float
+      if type_1 in whole_num_types + decimal_types:
         match operation:
+          # NOTE: Arithmetic operators
           case "+":
-            if conv_type is int:
-              result_value = int(self.value.value) + int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) + float(other.value.value)
+            result_value = conv_type(self.value.value) + conv_type(other.value.value)
           case "-":
-            if conv_type is int:
-              result_value = int(self.value.value) - int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) - float(other.value.value)
+            result_value = conv_type(self.value.value) - conv_type(other.value.value)
           case "*":
-            if conv_type is int:
-              result_value = int(self.value.value) * int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) * float(other.value.value)
+            result_value = conv_type(self.value.value) * conv_type(other.value.value)
           case "/":
             if other.value.value == 0 or other.value.value == 0.0:
               # Creating position if None
-              start_pos: Pos = (other.pos_start
-                                if other.pos_start is not None else
-                                (self.pos_start if self.pos_start is not None
-                                 else Pos(0, 0, 0, "<unknown>", "")))
-              end_pos: Pos = (self.pos_end if self.pos_end is not None else
-                              (other.pos_end if other.pos_end is not None else
-                               Pos(0, 0, 0, "<unknown>", "")))
+              start_pos: Pos = (
+                other.pos_start
+                if other.pos_start is not None
+                else (
+                  self.pos_start
+                  if self.pos_start is not None
+                  else Pos(0, 0, 0, "<unknown>", "")
+                )
+              )
+              end_pos: Pos = (
+                self.pos_end
+                if self.pos_end is not None
+                else (
+                  other.pos_end
+                  if other.pos_end is not None
+                  else Pos(0, 0, 0, "<unknown>", "")
+                )
+              )
 
               return None, RTError(
-                  pos_start=start_pos,
-                  pos_end=end_pos,
-                  details="Division by zero",
-                  context=self.context,
+                pos_start=start_pos,
+                pos_end=end_pos,
+                details="Division by zero",
+                context=self.context,
               )
-            if conv_type is int:
-              result_value = int(self.value.value) / int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) / float(other.value.value)
+            result_value = conv_type(self.value.value) / conv_type(other.value.value)
           case "^":
-            if conv_type is int:
-              result_value = int(self.value.value)**int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value)**float(other.value.value)
+            result_value = conv_type(self.value.value) ** conv_type(other.value.value)
 
+          # NOTE: Comparision operators
           case "<":
-            if conv_type is int:
-              result_value = int(self.value.value) < int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) < float(other.value.value)
+            result_value = conv_type(self.value.value) < conv_type(other.value.value)
           case ">":
-            if conv_type is int:
-              result_value = int(self.value.value) > int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) > float(other.value.value)
+            result_value = conv_type(self.value.value) > conv_type(other.value.value)
           case ">=":
-            if conv_type is int:
-              result_value = int(self.value.value) >= int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) >= float(
-                  other.value.value)
+            result_value = conv_type(self.value.value) >= conv_type(other.value.value)
           case "<=":
-            if conv_type is int:
-              result_value = int(self.value.value) <= int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) <= float(
-                  other.value.value)
+            result_value = conv_type(self.value.value) <= conv_type(other.value.value)
           case "==":
-            if conv_type is int:
-              result_value = int(self.value.value) == int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) == float(
-                  other.value.value)
+            result_value = conv_type(self.value.value) == conv_type(other.value.value)
           case "!=":
-            if conv_type is int:
-              result_value = int(self.value.value) != int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) != float(
-                  other.value.value)
+            result_value = conv_type(self.value.value) != conv_type(other.value.value)
           case "&&":
-            if conv_type is int:
-              result_value = int(self.value.value) and int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) and float(
-                  other.value.value)
+            result_value = conv_type(self.value.value) and conv_type(other.value.value)
           case "||":
-            if conv_type is int:
-              result_value = int(self.value.value) or int(other.value.value)
-            elif conv_type is float:
-              result_value = float(self.value.value) or float(
-                  other.value.value)
+            result_value = conv_type(self.value.value) or conv_type(other.value.value)
           case "!":
-            if conv_type is int:
-              result_value = not int(self.value.value)
-            elif conv_type is float:
-              result_value = not float(self.value.value)
+            result_value = not conv_type(self.value.value)
         result_value = type_(result_value)
         return result_value
 
-  def set_pos(self,
-              pos_start: Pos | None = None,
-              pos_end: Pos | None = None) -> Self:
+  def set_pos(self, pos_start: Pos | None = None, pos_end: Pos | None = None) -> Self:
     self.pos_start = pos_start
     self.pos_end = pos_end
     return self
@@ -218,6 +168,13 @@ class RuntimeNumber:
     copy.set_pos(self.pos_start, self.pos_end)
     copy.set_context(self.context)
     return copy
+
+  # NOTE: This is not needed right now, may need in the future
+  # def __hash__(self) -> int:
+  #   return hash((self.value.value, self.type_))
+
+  def __eq__(self, other) -> bool:
+    return self.value.value == other.value.value and self.type_ == other.type_
 
   def __repr__(self) -> str:
     return f"{type_map.get(self.type_)}({self.value.value})"

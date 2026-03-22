@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from middle_end.POSITION import Pos
 
 
-class TT(Enum):
+class TT(StrEnum):
   # Types
   INT = "INT"
   FLOAT = "FLOAT"
@@ -15,10 +15,14 @@ class TT(Enum):
   DIV = "DIV"
   POW = "POW"
   EQ = "EQ"
-  INCREMENT = "INCREMENT" # ++
-  INCRBY = "INCRBY" # +=
-  DECREMENT = "DECREMENT" # --
-  DECRBY = "DECRBY" # -=
+  INCREMENT = "INCREMENT"  # ++
+  INCRBY = "INCRBY"  # +=
+  DECREMENT = "DECREMENT"  # --
+  DECRBY = "DECRBY"  # -=
+  
+  # Functions
+  COMMA = "COMMA"
+  ARROW = "ARROW"
 
   # Braces or brackets
   LPAREN = "LPAREN"
@@ -31,7 +35,10 @@ class TT(Enum):
   KEYWORD = "KEYWORD"
   SEMI = "SEMI"
   EOF = "EOF"
-  RANGE = "RANGE" # ...
+  
+  # Loops
+  RANGE = "RANGE"  # ...
+
   # Comparision Operators
   DOUBLE_EQ = "DOUBLE_EQ"  # ==
   NOT_EQ = "NOT_EQ"  # !=
@@ -45,20 +52,21 @@ class TT(Enum):
 
 
 class Token:
-
   def __init__(
-      self,
-      type_: TT,
-      value: Any = None,
-      pos_start: Pos | None = None,
-      pos_end: Pos | None = None,
+    self,
+    type_: TT,
+    value: Any = None,
+    pos_start: Pos | None = None,
+    pos_end: Pos | None = None,
   ) -> None:
     self.type = type_
     self.value = value
+
     if pos_start:
       self.pos_start: Pos = pos_start
       self.pos_end: Pos = pos_start.copy()
       self.pos_end.advance()
+
     if pos_end:
       self.pos_end = pos_end
 

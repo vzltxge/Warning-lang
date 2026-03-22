@@ -1,4 +1,7 @@
 from typing import Any
+import colorama
+
+colorama.init(autoreset=True)
 
 
 def string_with_arrows(text, pos_start, pos_end):
@@ -27,5 +30,5 @@ def string_with_arrows(text, pos_start, pos_end):
     idx_end = text.find("\n", idx_start + 1)
     if idx_end < 0:
       idx_end = len(text)
-
-  return result.replace("\t", "")
+  coloured_result = colorama.Fore.CYAN + result
+  return coloured_result.replace("\t", "")

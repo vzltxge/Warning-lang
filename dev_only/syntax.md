@@ -15,6 +15,7 @@ for i in 1...10 step 1 {
 while a == 100 {
 
 }
+
 # Functions: implement soon
 void c() {
   print(`Hello bro how are you`)

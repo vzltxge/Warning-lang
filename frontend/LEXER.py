@@ -1,39 +1,30 @@
 # NOTE: Started project on 4th January 2025.
-# NOTE: This is the thing that caused me, pain and suffering all my life.
+
 from frontend.TOKENS import Token, TT
 from middle_end.ERRORS import ExpectedCharError, IllegalCharError, Error
 from middle_end.POSITION import Pos
+from frontend.keywords import KEYWORDS, ALTKEYWORDS
 from typing import Any
 import string
 
 # NOTE: Lexing
+
+
 class Lexer:
   def __init__(self, fn: str, code: str) -> None:
     self.code = code
     self.fn = fn
-    self.pos: Pos = Pos(index=-1,
-                        line_num=0,
-                        col_num=-1,
-                        fn=self.fn,
-                        ftxt=code)
+    self.pos: Pos = Pos(index=-1, line_num=0, col_num=-1, fn=self.fn, ftxt=code)
     self.current_char: str | None = None
     self.advance()
     self.__operators: dict[str, TT] = {
-        "/": TT.DIV,
-        "*": TT.MUL,
-        "^": TT.POW,
-        # NOTE: The plus and minus operators will be handles seperately 
+      "/": TT.DIV,
+      "*": TT.MUL,
+      "^": TT.POW,
+      # NOTE: The plus and minus operators will be handles seperately
     }
-    self.KEYWORDS: list[str] = [
-        "i64", "i32", "i16","i8",        # Signed Integer Types
-        "u64", "u32", "u16","u8",       # Unsigned Integer Types
-        "f32", "f64",                   # Float Types 
-        "if", "else", "elif",           # Conditionals
-        "for", "while", "step", "in",   # Loops
-        "decr", "incr", "mult", "div", "by", # Modifying variable by an amount
-        "const",  # State of a variable
-    ]
-    self.ALTKEYWORDS: list[str] = ["vibecheck", "also", "idk", "rickroll", "loopsy"]
+    self.KEYWORDS: tuple[str] = KEYWORDS
+    self.ALTKEYWORDS: tuple[str] = ALTKEYWORDS
     self.__digits: str = "0123456789"
     self.__letters: str = string.ascii_letters
     self.__letters_digits: str = self.__digits + self.__letters
@@ -41,17 +32,23 @@ class Lexer:
   # NOTE: Advance method
   def advance(self) -> None:
     self.pos.advance(self.current_char)
-    self.current_char = (self.code[self.pos.index]
-                         if self.pos.index < len(self.code) else None)
+    self.current_char = (
+      self.code[self.pos.index] if self.pos.index < len(self.code) else None
+    )
+
   # NOTE: Responsible for handling numbers
+
   def get_number(self, tokens) -> Token:
     num_str: str = ""
     dot_count: int = 0
     pos_start: Pos = self.pos.copy()
-    while self.current_char and self.current_char in self.__digits or (self.current_char == '.' and self.peek() and self.peek().isdigit()):
+    while (
+      self.current_char
+      and self.current_char in self.__digits
+      or (self.current_char == "." and self.peek() and self.peek().isdigit())
+    ):
       if self.current_char == ".":
         dot_count += 1
-        self.advance()
       if dot_count > 1:
         break
       else:
@@ -60,34 +57,31 @@ class Lexer:
 
     if dot_count == 0:
       return Token(
-          type_=TT.INT,
-          value=int(num_str),
-          pos_start=pos_start,
-          pos_end=self.pos.copy(),
-      )
-    return Token(
-        type_=TT.FLOAT,
-        value=float(num_str),
+        type_=TT.INT,
+        value=int(num_str),
         pos_start=pos_start,
         pos_end=self.pos.copy(),
+      )
+    return Token(
+      type_=TT.FLOAT,
+      value=float(num_str),
+      pos_start=pos_start,
+      pos_end=self.pos.copy(),
     )
-  def peek(self, distance: int=1):
+
+  def peek(self, distance: int = 1) -> str | None:
     idx: int = self.pos.index + distance
     if idx < len(self.code):
       return self.code[idx]
     return None
+
   # NOTE: Expects a character and if found returns a token with a given type, value, pos start and pos_end
-  def expect(self,
-             char: str,
-             type_: TT,
-             pos_start: Pos,
-             pos_end: Pos,
-             value: Any = None) -> Token | None:
+
+  def expect(
+    self, char: str, type_: TT, pos_start: Pos, pos_end: Pos, value: Any = None
+  ) -> Token | None:
     if self.current_char == char:
-      return Token(type_=type_,
-                   value=value,
-                   pos_start=pos_start,
-                   pos_end=pos_end)
+      return Token(type_=type_, value=value, pos_start=pos_start, pos_end=pos_end)
 
   # * Handles identifiers
   def get_identifier(self):
@@ -109,8 +103,7 @@ class Lexer:
     self.advance()
     if self.current_char == "=":
       self.advance()
-      return Token(type_=TT.NOT_EQ, pos_start=pos_start,
-                   pos_end=self.pos), None
+      return Token(type_=TT.NOT_EQ, pos_start=pos_start, pos_end=self.pos), None
     return Token(type_=TT.NOT, pos_start=pos_start, pos_end=self.pos), None
 
   # * This function handles eq and double eq {==, =}
@@ -120,8 +113,8 @@ class Lexer:
     if self.current_char == "=":
       self.advance()
       return (
-          Token(type_=TT.DOUBLE_EQ, pos_start=pos_start, pos_end=self.pos),
-          None,
+        Token(type_=TT.DOUBLE_EQ, pos_start=pos_start, pos_end=self.pos),
+        None,
       )
     return Token(type_=TT.EQ, pos_start=pos_start, pos_end=self.pos), None
 
@@ -151,9 +144,8 @@ class Lexer:
       self.advance()
       return Token(type_=TT.AND, pos_start=pos_start, pos_end=self.pos), None
     return [], ExpectedCharError(
-        pos_start,
-        self.pos,
-        details="Expected another `&`, use `&&` next time!")
+      pos_start, self.pos, details="Expected another `&`, use `&&` next time!"
+    )
 
   # * Function that handles ||
   def make_or(self) -> tuple[Token, None] | tuple[list, Error]:
@@ -163,9 +155,9 @@ class Lexer:
       self.advance()
       return Token(type_=TT.OR, pos_start=pos_start, pos_end=self.pos), None
     return [], ExpectedCharError(
-        pos_start,
-        self.pos,
-        details="Expected another `|`, use `||` next time!\nOr else...",
+      pos_start,
+      self.pos,
+      details="Expected another `|`, use `||` next time!\nOr else...",
     )
 
   # NOTE: This handles increment and increment by (++, +=)
@@ -180,19 +172,24 @@ class Lexer:
       return Token(type_=TT.INCRBY, pos_start=pos_start, pos_end=self.pos)
     return Token(type_=TT.PLUS, pos_start=pos_start, pos_end=self.pos)
 
-
   # NOTE: This handles decrement and decrement by (--, -=)
-  def make_decrement(self) -> Token:
+
+  def make_decrement_or_arrow(self) -> Token:
     pos_start: Pos = self.pos.copy()
     self.advance()
     if self.current_char == "-":
       self.advance()
       return Token(type_=TT.DECREMENT, pos_start=pos_start, pos_end=self.pos)
+    elif self.current_char == ">":
+      self.advance()
+      return Token(type_=TT.ARROW, pos_start=pos_start, pos_end=self.pos)
     elif self.current_char == "=":
       self.advance()
       return Token(type_=TT.DECRBY, pos_start=pos_start, pos_end=self.pos)
     return Token(type_=TT.MINUS, pos_start=pos_start, pos_end=self.pos)
+
   # * Gets tokens and returns the tokens
+
   def get_tokens(self) -> tuple[list[Token], list[Error]]:
     tokens: list[Token] = []
     errors: list[Error] = []
@@ -207,46 +204,54 @@ class Lexer:
         self.advance()
       elif self.current_char == "\n":
         self.advance()
+        
       elif self.current_char == "+":
         token = self.make_increment()
         tokens.append(token)
+        
       elif self.current_char == "-":
-        token = self.make_decrement()
+        token = self.make_decrement_or_arrow()
         tokens.append(token)
+        
       elif self.current_char == ";":
-        tokens.append(
-            Token(type_=TT.SEMI, pos_start=self.pos, pos_end=self.pos))
+        tokens.append(Token(type_=TT.SEMI, pos_start=self.pos, pos_end=self.pos))
         self.advance()
+        
       elif self.current_char == ".":
         pos_start = self.pos.copy()
-        if self.peek() == '.' and self.peek(2) == '.':
+        if self.peek() == "." and self.peek(2) == ".":
           tokens.append(Token(type_=TT.RANGE, pos_start=pos_start, pos_end=self.pos))
         self.advance()
+        
       elif self.current_char in self.__letters:
         tokens.append(self.get_identifier())
 
       elif self.current_char in self.__digits:
         tokens.append(self.get_number(tokens))
-
+      
+      elif self.current_char == ",":
+        tokens.append(Token(type_=TT.COMMA, value=self.current_char, pos_start=self.pos))
+        self.advance()
+        
       elif self.current_char == "(":
         tokens.append(
-            Token(type_=TT.LPAREN, value=self.current_char,
-                  pos_start=self.pos))
+          Token(type_=TT.LPAREN, value=self.current_char, pos_start=self.pos)
+        )
         self.advance()
       elif self.current_char == "{":
         tokens.append(
-            Token(type_=TT.LBRACE, value=self.current_char,
-                  pos_start=self.pos))
+          Token(type_=TT.LBRACE, value=self.current_char, pos_start=self.pos)
+        )
         self.advance()
       elif self.current_char == "}":
         tokens.append(
-            Token(type_=TT.RBRACE, value=self.current_char,
-                  pos_start=self.pos))
+          Token(type_=TT.RBRACE, value=self.current_char, pos_start=self.pos)
+        )
         self.advance()
       elif self.current_char == ")":
         tokens.append(
-            Token(type_=TT.RPAREN, value=self.current_char,
-                  pos_start=self.pos))
+          Token(type_=TT.RPAREN, value=self.current_char, pos_start=self.pos)
+        )
         self.advance()
 
       elif self.current_char == "!":
@@ -291,8 +296,7 @@ class Lexer:
 
       # NOTE: Handles +, -, /, * and ^
       elif self.current_char in self.__operators:
-        tokens.append(
-            Token(self.__operators[self.current_char], pos_start=self.pos))
+        tokens.append(Token(self.__operators[self.current_char], pos_start=self.pos))
         self.advance()
 
       else:
@@ -302,9 +306,8 @@ class Lexer:
         print(repr(self.current_char))
         self.advance()
         errors.append(
-            IllegalCharError(pos_start=pos_start,
-                             pos_end=self.pos,
-                             details=char))
+          IllegalCharError(pos_start=pos_start, pos_end=self.pos, details=char)
+        )
         break
     tokens.append(Token(type_=TT.EOF, pos_start=self.pos))
     if errors:

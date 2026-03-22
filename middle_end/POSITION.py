@@ -1,10 +1,12 @@
 from typing import Self
 
-
 # Position
+
+
 class Pos:
-  def __init__(self, index: int, line_num: int, col_num: int, fn: str,
-               ftxt: str) -> None:
+  def __init__(
+    self, index: int, line_num: int, col_num: int, fn: str, ftxt: str
+  ) -> None:
     self.index = index
     self.line_num = line_num
     self.col_num = col_num

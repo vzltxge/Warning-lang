@@ -1,25 +1,28 @@
+# INFO: 
+  Run code using uv run py -m backend.SHELL testing/code.warn .
+  You can also make a warning debug file which ends in warn_dbg.
+  I kind of borrowed rust syntax especially with the ... operator and the types.
+  The name of this language is warning-lang, I previously called it thing-lang.
+  
+  Warning-lang was made in python and development started on January 4th 2026.
+  This is the warning programming language, btw it is interpreted.
+  This is written in python and i used the ctypes module: If you want, suggest other modules for types I could have used. 
+  It is a statically typed language.
+  I made it static because:
+    - It is easier to optimize the code when the type is known at before runtime
+    - It is easier to debug the code.
 
-Run code using uv run py -m backend.SHELL testing/code.th.
-You can also make a warning debug file which ends in warn_dbg.
-I kind of borrowed rust syntax especially with the ... operator and the types.
-The name of this language is warning-lang, I previously called it thing-lang.
 
-Warning-lang was made in python and development started on January 4th 2026.
-This is the warning programming language, btw it is interpreted.
-This is written in python and i used the ctypes module: If you want suggest other modules for types i could have used.
-It is a statically typed language.
-I made it static because:
-- It is easier to optimize the code when the type is known at before runtime
-- It is easier to debug the code.
-
-
+# Stmts:
+  Btw all statements and expressions must end in ;
+  They do not return anything
+  
+# Expr:
+  They return something.
+  If blocks are expressions in warning-lang.
+  
 # Variables:
-  Types
-    #NOTE: Soon implement these
-  
-    str
-  
-    #Implemented
+    ### Implemented ###
     -i16 -> c_short
     -i32 -> c_long
     -i64 -> c_longlong
@@ -32,7 +35,7 @@ I made it static because:
   
   Note: The dec keyword is decimal-ish, it is not as precise as python's decimal.Decimal but it has around 6-7 digits of precision.
   
-  I did not add a 67 reference but unfortunately, That is the precision of the decimal type in thing-lang.
+  I did not add a 67 reference but unfortunately, That is the precision of the decimal type in warning-lang.
   
   It uses the IEEE 754 32-bit standard for floating-point numbers.
   The standard is OK in terms of precision, but it is fast and efficient.
@@ -47,21 +50,31 @@ I made it static because:
   The promotion is as follows:
   
   ---
-  
   u8 -> u16 -> u32 -> u64 -> i16 -> i32 -> i64 -> f32 -> f64
-  
   ---
+  
   There are also constant variables:
   i32 const a = 10;
   The const keyword must come after the type.
 
 # If Statements:
   if condition {
-    expression/statement
+    // code
   };
 
 # For loops:
   For loops have a required step variable and you should use the step keyword.
-  For loops have a range and you use the ... operator  while Rust-lang uses ..
+  For loops have a range and you use the ... operator while Rust-lang uses ..
   While loops do not have a step variable.
-  Btw all statements and expressions must end in ;
+
+
+# Ghosts:
+  A ghost something that is empty. If a variable is not assigned a value, it is a ghost.
+  If a function has no body it is a ghost function.
+  Certain ghosts are bad and some are allowed.
+  The notdefined variable ghost is bad but the empty function ghost is ok.
+  
+  The farther a ghosts value is from 3 determines how bad it is.
+  The value of 1 means the ghost will lead to an error.
+  The value of 2 means the ghost will lead ot a warning.
+  The value of 3 means the ghost is OK.

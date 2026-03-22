@@ -13,27 +13,27 @@ term    : factor ((MUL|DIV) factor)*
 factor	: (PLUS|MINUS) factor
 				: power
 				
-power	: atom (POW factor)*
+power	: call (POW factor)*
+
+call: atom (LPAREN, (expr)?, RPAREN)
 
 atom 	: INT|FLOAT
   		: LPAREN expr RPAREN
   		: if-expr
+      : func-def
 
 if-expr : IF LPAREN expr RPAREN LBRACE expr RBRACE
         (ELSEIF LPAREN expr RPAREN LBRACE expr RBRACE)* 
         (ELSE LBRACE expr RBRACE)?
 
+
+func-def: FN:KEYWORD IDENTIFIER?
+  LPAREN (IDENTIFIER, ...) RPAREN
+
+  
 AND should have less precedence than arth-expr
+Comparison should have more precedence than var assignment but less than term, factor and power
 
-Comparison should have more precedence tha var assign ment but less than term, factor and power
-
-
-Variables>
->>> var a = 12
->>> a
-12
->>> 2 + a
-14
 
 Comparison OP's
 
